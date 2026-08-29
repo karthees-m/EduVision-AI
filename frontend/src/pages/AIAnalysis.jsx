@@ -30,7 +30,6 @@ const AIAnalysis = () => {
   const [studyData, setStudyData] = useState(null);
   const [error, setError] = useState("");
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -51,7 +50,7 @@ const AIAnalysis = () => {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/generate-content",
+        "https://eduvision-ai-qcw7.onrender.com/api/generate-content",
         {
           method: "POST",
           headers: {
