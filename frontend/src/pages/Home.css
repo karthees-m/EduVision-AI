@@ -1,0 +1,332 @@
+html,
+body,
+#root {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+
+.home-container {
+  min-height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at 50% 0%, #f1f5f9 0%, #f8fafc 100%);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-x: hidden;
+}
+
+.home-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 48px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 19px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.4px;
+}
+
+.brand-icon-box {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+  flex-shrink: 0;
+}
+
+.nav-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #0f172a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  white-space: nowrap;
+}
+
+.nav-login-btn:hover {
+  transform: translateY(-2px);
+  background: #1e293b;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+}
+
+.home-hero {
+  flex: 1;
+  max-width: 1150px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 70px 24px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-radius: 30px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  border: 1px solid #dbeafe;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+  letter-spacing: 0.3px;
+}
+
+.home-hero h1 {
+  font-size: 52px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 20px 0;
+  letter-spacing: -1.5px;
+  line-height: 1.15;
+}
+
+.home-hero h1 .highlight {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.home-hero p {
+  font-size: 18px;
+  color: #64748b;
+  max-width: 660px;
+  margin: 0 auto 38px auto;
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+.primary-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 32px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+}
+
+.primary-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.45);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.features-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 70px;
+  text-align: left;
+  width: 100%;
+}
+
+.feature-preview-card {
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.03);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 100%;
+}
+
+.feature-preview-card:hover {
+  transform: translateY(-5px);
+  border-color: #cbd5e1;
+  box-shadow: 0 18px 35px -10px rgba(15, 23, 42, 0.08);
+}
+
+.preview-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.preview-icon.blue {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+}
+.preview-icon.purple {
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  color: #9333ea;
+}
+.preview-icon.green {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #16a34a;
+}
+
+.feature-preview-card h3 {
+  font-size: 18.5px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.3px;
+}
+
+.feature-preview-card p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.home-footer {
+  text-align: center;
+  padding: 24px;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 13.5px;
+  width: 100%;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .features-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-navbar {
+    padding: 16px 20px;
+  }
+
+  .nav-brand {
+    font-size: 17px;
+    gap: 10px;
+  }
+
+  .brand-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .nav-login-btn {
+    padding: 8px 14px;
+    font-size: 12.5px;
+    border-radius: 10px;
+  }
+
+  .home-hero {
+    padding: 40px 16px;
+  }
+
+  .hero-badge {
+    font-size: 11.5px;
+    padding: 5px 12px;
+    margin-bottom: 16px;
+  }
+
+  .home-hero h1 {
+    font-size: 32px;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .home-hero p {
+    font-size: 15px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .primary-cta {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    border-radius: 12px;
+  }
+
+  .features-preview-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .feature-preview-card {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .preview-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+
+  .feature-preview-card h3 {
+    font-size: 17px;
+  }
+
+  .feature-preview-card p {
+    font-size: 13.5px;
+  }
+
+  .home-footer {
+    padding: 20px 16px;
+    font-size: 13px;
+  }
+}
