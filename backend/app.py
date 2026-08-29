@@ -1,5 +1,3 @@
-# backend/app.py
-
 import os
 import json
 import re
@@ -19,14 +17,12 @@ CORS(
     supports_credentials=False
 )
 
-
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY not found. Check backend/.env")
 
 genai.configure(api_key=GEMINI_API_KEY)
-
 
 FORMAT_INSTRUCTIONS = {
     "Comprehensive Notes": (
@@ -45,7 +41,6 @@ FORMAT_INSTRUCTIONS = {
     ),
 }
 
-
 DIFFICULTY_INSTRUCTIONS = {
     "Beginner": (
         "Keep questions simple and definitional — testing basic recall and "
@@ -61,8 +56,6 @@ DIFFICULTY_INSTRUCTIONS = {
         "that guessing without real understanding is hard."
     ),
 }
-
-
 
 LANGUAGE_INSTRUCTIONS = {
     "English": (
@@ -88,9 +81,7 @@ LANGUAGE_INSTRUCTIONS = {
     ),
 }
 
-
 def generate_content_impl(topic, format_type):
-
     style_instruction = FORMAT_INSTRUCTIONS.get(
         format_type, FORMAT_INSTRUCTIONS["Comprehensive Notes"]
     )
@@ -152,9 +143,7 @@ Output raw JSON only.
 """
     return prompt
 
-
 def generate_quiz_prompt(topic, difficulty, question_count, language):
-
     difficulty_instruction = DIFFICULTY_INSTRUCTIONS.get(
         difficulty, DIFFICULTY_INSTRUCTIONS["Medium"]
     )
@@ -223,7 +212,6 @@ PREFERRED_MODELS = [
     "models/gemini-1.5-pro-latest",
 ]
 
-
 def get_candidate_models():
     try:
         available = [
@@ -237,7 +225,6 @@ def get_candidate_models():
     ordered = [name for name in PREFERRED_MODELS if name in available]
     ordered += [name for name in available if name not in ordered]
     return ordered or PREFERRED_MODELS
-
 
 def generate_with_fallback(prompt):
     if _MODEL_CACHE["name"]:
@@ -279,7 +266,6 @@ def clean_json_response(text):
 
 @app.route("/api/generate-content", methods=["POST", "OPTIONS"])
 def generate_content():
-
     if request.method == "OPTIONS":
         return jsonify({}), 200
 
@@ -320,7 +306,6 @@ def generate_content():
 
 @app.route("/api/generate-quiz", methods=["POST", "OPTIONS"])
 def generate_quiz():
-
     if request.method == "OPTIONS":
         return jsonify({}), 200
 
@@ -346,7 +331,6 @@ def generate_quiz():
         except (TypeError, ValueError):
             question_count = 5
 
-        # custom count, sane upper bound so one request doesn't time out
         question_count = max(1, min(question_count, 25))
 
         prompt = generate_quiz_prompt(topic, difficulty, question_count, language)
