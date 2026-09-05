@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -22,7 +22,7 @@ import {
   Award,
   UserCheck,
   Hash,
-  Eye,
+  ChevronDown,
 } from "lucide-react";
 import "./StaffManagement.css";
 
@@ -30,10 +30,13 @@ const StaffManagement = () => {
   const [staffList, setStaffList] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState(null); 
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
+
+  const [isDeptOpen, setIsDeptOpen] = useState(false);
+  const deptRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,10 +48,22 @@ const StaffManagement = () => {
     experience: "",
   });
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (deptRef.current && !deptRef.current.contains(event.target)) {
+        setIsDeptOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const fetchStaff = async () => {
     try {
       const staffSnap = await getDocs(collection(db, "staff"));
-      setStaffList(staffSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setStaffList(
+        staffSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
     } catch (err) {
       console.error(err);
     }
@@ -57,7 +72,9 @@ const StaffManagement = () => {
   const fetchDepartments = async () => {
     try {
       const deptSnap = await getDocs(collection(db, "departments"));
-      setDepartments(deptSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+      setDepartments(
+        deptSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
     } catch (err) {
       console.error(err);
     }
@@ -104,6 +121,10 @@ const StaffManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.department) {
+      alert("Please select a department");
+      return;
+    }
     setLoading(true);
     try {
       if (isEditing) {
@@ -136,7 +157,8 @@ const StaffManagement = () => {
             <Users className="title-icon" /> Staff Management
           </h1>
           <p className="page-subtitle">
-            Manage faculty members, departmental roles, and academic qualifications.
+            Manage faculty members, departmental roles, and academic
+            qualifications.
           </p>
         </div>
         <button className="primary-btn" onClick={openAddForm}>
@@ -176,21 +198,32 @@ const StaffManagement = () => {
                         {staff.name ? staff.name.charAt(0).toUpperCase() : "S"}
                       </div>
                       <div>
-                        <span className="font-medium text-link">{staff.name}</span>
+                        <span className="font-medium text-link">
+                          {staff.name}
+                        </span>
                         <div className="text-xs text-gray">{staff.email}</div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className="badge-outline">#{staff.employeeId || "N/A"}</span>
+                    <span className="badge-outline">
+                      #{staff.employeeId || "N/A"}
+                    </span>
                   </td>
                   <td>
-                    <span className="badge-purple">{staff.department || "N/A"}</span>
+                    <span className="badge-purple">
+                      {staff.department || "N/A"}
+                    </span>
                   </td>
                   <td>{staff.designation || "Assistant Professor"}</td>
-                  <td>{staff.experience ? `${staff.experience} Years` : "N/A"}</td>
+                  <td>
+                    {staff.experience ? `${staff.experience} Years` : "N/A"}
+                  </td>
                   <td style={{ textAlign: "right" }}>
-                    <div className="action-buttons" style={{ justifyContent: "flex-end" }}>
+                    <div
+                      className="action-buttons"
+                      style={{ justifyContent: "flex-end" }}
+                    >
                       <button
                         className="icon-btn edit-btn"
                         onClick={(e) => openEditForm(staff, e)}
@@ -216,38 +249,37 @@ const StaffManagement = () => {
 
       {selectedStaff && (
         <div className="modal-overlay" onClick={() => setSelectedStaff(null)}>
-          <div className="modal-content-pro" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-content-pro"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="pro-modal-header">
+              <button
+                className="close-btn-pro"
+                onClick={() => setSelectedStaff(null)}
+              >
+                <X size={20} />
+              </button>
               <div className="pro-header-left">
                 <div className="pro-avatar-lg glowing-avatar">
-                  {selectedStaff.name ? selectedStaff.name.charAt(0).toUpperCase() : "S"}
+                  {selectedStaff.name
+                    ? selectedStaff.name.charAt(0).toUpperCase()
+                    : "S"}
                 </div>
                 <div className="pro-header-text-box">
                   <div className="pro-badges-row">
-                    <span className="pro-badge-dept">{selectedStaff.department || "IT"}</span>
-                    <span className="pro-badge-sem">{selectedStaff.designation || "Faculty"}</span>
+                    <span className="pro-badge-dept">
+                      {selectedStaff.department || "IT"}
+                    </span>
+                    <span className="pro-badge-sem">
+                      {selectedStaff.designation || "Faculty"}
+                    </span>
                   </div>
                   <h2>{selectedStaff.name}</h2>
-                  <p>#{selectedStaff.employeeId} • {selectedStaff.email}</p>
+                  <p>
+                    #{selectedStaff.employeeId} • {selectedStaff.email}
+                  </p>
                 </div>
-              </div>
-
-              <div className="pro-header-right-group">
-                <div className="pro-header-cgpa-card">
-                  <div className="cgpa-icon-bg">
-                    <Briefcase size={18} />
-                  </div>
-                  <div>
-                    <span className="cgpa-title">Experience</span>
-                    <h4 className="cgpa-score">{selectedStaff.experience || "0"} Yrs</h4>
-                  </div>
-                </div>
-                <button
-                  className="close-btn-pro"
-                  onClick={() => setSelectedStaff(null)}
-                >
-                  <X size={20} />
-                </button>
               </div>
             </div>
 
@@ -257,37 +289,51 @@ const StaffManagement = () => {
                   <span className="info-label">
                     <Hash size={14} /> Employee ID
                   </span>
-                  <span className="info-value">{selectedStaff.employeeId || "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.employeeId || "N/A"}
+                  </span>
                 </div>
                 <div className="info-card">
                   <span className="info-label">
                     <Building2 size={14} /> Department
                   </span>
-                  <span className="info-value">{selectedStaff.department || "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.department || "N/A"}
+                  </span>
                 </div>
                 <div className="info-card">
                   <span className="info-label">
                     <UserCheck size={14} /> Designation
                   </span>
-                  <span className="info-value">{selectedStaff.designation || "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.designation || "N/A"}
+                  </span>
                 </div>
                 <div className="info-card">
                   <span className="info-label">
                     <GraduationCap size={14} /> Qualification
                   </span>
-                  <span className="info-value">{selectedStaff.qualification || "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.qualification || "N/A"}
+                  </span>
                 </div>
                 <div className="info-card">
                   <span className="info-label">
                     <Award size={14} /> Teaching Experience
                   </span>
-                  <span className="info-value">{selectedStaff.experience ? `${selectedStaff.experience} Years` : "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.experience
+                      ? `${selectedStaff.experience} Years`
+                      : "N/A"}
+                  </span>
                 </div>
                 <div className="info-card">
                   <span className="info-label">
                     <Mail size={14} /> Email Address
                   </span>
-                  <span className="info-value">{selectedStaff.email || "N/A"}</span>
+                  <span className="info-value">
+                    {selectedStaff.email || "N/A"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -318,7 +364,7 @@ const StaffManagement = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  placeholder="e.g. Dr. Chockalingam"
+                  placeholder="Staff Name"
                   className="modern-input"
                 />
               </div>
@@ -335,30 +381,59 @@ const StaffManagement = () => {
                     value={formData.employeeId}
                     onChange={handleInputChange}
                     required
-                    placeholder="e.g. dhh2"
+                    placeholder="e.g. ITS01"
                     className="modern-input"
                   />
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group" ref={deptRef}>
                 <label>Department *</label>
                 <div className="input-wrapper">
                   <Building2 size={18} className="input-icon" />
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    required
-                    className="modern-select modern-input"
+                  <div
+                    className={`custom-dropdown-trigger ${isDeptOpen ? "active" : ""}`}
+                    onClick={() => setIsDeptOpen(!isDeptOpen)}
                   >
-                    <option value="" disabled>Select Department</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.name}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
+                    <span
+                      className={`selected-value-text ${!formData.department ? "placeholder" : ""}`}
+                    >
+                      {formData.department || "Select Department"}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`dropdown-chevron ${isDeptOpen ? "open" : ""}`}
+                    />
+                  </div>
+
+                  {isDeptOpen && (
+                    <div className="custom-dropdown-list-box fade-in">
+                      {departments.length === 0 ? (
+                        <div
+                          className="custom-dropdown-item"
+                          style={{ color: "#94a3b8" }}
+                        >
+                          No departments found
+                        </div>
+                      ) : (
+                        departments.map((dept) => (
+                          <div
+                            key={dept.id}
+                            className={`custom-dropdown-item ${formData.department === dept.name ? "selected" : ""}`}
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                department: dept.name,
+                              });
+                              setIsDeptOpen(false);
+                            }}
+                          >
+                            {dept.name}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -449,7 +524,8 @@ const StaffManagement = () => {
                 "Saving..."
               ) : (
                 <>
-                  <CheckCircle2 size={18} /> {isEditing ? "Save Changes" : "Register Staff"}
+                  <CheckCircle2 size={18} />{" "}
+                  {isEditing ? "Save Changes" : "Register Staff"}
                 </>
               )}
             </button>
