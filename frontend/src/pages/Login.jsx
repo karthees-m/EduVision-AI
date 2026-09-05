@@ -32,8 +32,21 @@ const Login = () => {
     setMessage("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/dashboard");
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+      const user = userCredential.user;
+
+      if (user && user.email) {
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify({ email: user.email.trim().toLowerCase() }),
+        );
+      }
+
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
       setError("Invalid email or password. Please try again.");
@@ -47,8 +60,18 @@ const Login = () => {
       setLoading(true);
       setError("");
       setMessage("");
-      await signInWithPopup(auth, provider);
-      navigate("/dashboard");
+
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      if (user && user.email) {
+        localStorage.setItem(
+          "currentUser",
+          JSON.stringify({ email: user.email.trim().toLowerCase() }),
+        );
+      }
+
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
       setError("Google authentication failed. Please try again.");
