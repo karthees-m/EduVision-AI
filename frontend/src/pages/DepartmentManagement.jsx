@@ -7,8 +7,10 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  query,
+  where,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   Building2,
   Plus,
@@ -38,8 +40,19 @@ const DepartmentManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    totalSemesters: "", 
+    totalSemesters: "",
   });
+
+  const getLoggedInEmail = () => {
+    if (auth.currentUser && auth.currentUser.email) {
+      return auth.currentUser.email.trim().toLowerCase();
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      if (stored.email) return stored.email.trim().toLowerCase();
+    } catch (e) {}
+    return "guest@jpcollege.edu";
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -52,11 +65,19 @@ const DepartmentManagement = () => {
   }, []);
 
   const fetchDepartments = async () => {
-    const deptCollection = collection(db, "departments");
-    const deptSnapshot = await getDocs(deptCollection);
-    setDepartments(
-      deptSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-    );
+    try {
+      const userEmail = getLoggedInEmail();
+      const q = query(
+        collection(db, "departments"),
+        where("userEmail", "==", userEmail),
+      );
+      const deptSnapshot = await getDocs(q);
+      setDepartments(
+        deptSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -91,9 +112,12 @@ const DepartmentManagement = () => {
       return;
     }
     setLoading(true);
+    const userEmail = getLoggedInEmail();
     try {
-      if (isEditing) await updateDoc(doc(db, "departments", editId), formData);
-      else await addDoc(collection(db, "departments"), formData);
+      const deptPayload = { ...formData, userEmail };
+      if (isEditing)
+        await updateDoc(doc(db, "departments", editId), deptPayload);
+      else await addDoc(collection(db, "departments"), deptPayload);
       setShowForm(false);
       fetchDepartments();
     } catch (error) {
@@ -223,7 +247,7 @@ const DepartmentManagement = () => {
                 />
               </div>
             </div>
-            
+
             <div className="form-group" ref={semRef}>
               <label>
                 Total Semesters <span className="required">*</span>
