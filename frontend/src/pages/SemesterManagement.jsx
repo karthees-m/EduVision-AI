@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import {
   collection,
   addDoc,
@@ -7,315 +6,371 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  getDoc,
   query,
   where,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
-  ArrowLeft,
-  BookOpen,
+  Users,
   Plus,
   Edit2,
   Trash2,
   X,
   CheckCircle2,
-  FileText,
-  Hash,
+  Mail,
+  Building2,
+  Briefcase,
+  GraduationCap,
+  Award,
   UserCheck,
-  LayoutList,
+  Hash,
   ChevronDown,
 } from "lucide-react";
-import "./SemesterManagement.css";
+import "./StaffManagement.css";
 
-const SemesterManagement = () => {
-  const { deptId } = useParams();
-  const navigate = useNavigate();
-
-  const [department, setDepartment] = useState(null);
+const StaffManagement = () => {
   const [staffList, setStaffList] = useState([]);
-  const [subjects, setSubjects] = useState([]);
-
-  const [activeSemester, setActiveSemester] = useState(1);
+  const [departments, setDepartments] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
 
-  const [isStaffOpen, setIsStaffOpen] = useState(false);
-  const staffRef = useRef(null);
+  const [isDeptOpen, setIsDeptOpen] = useState(false);
+  const deptRef = useRef(null);
 
   const [formData, setFormData] = useState({
     name: "",
-    code: "",
-    credits: "",
-    syllabus: "",
-    staffId: "",
-    staffName: "",
+    employeeId: "",
+    email: "",
+    department: "",
+    designation: "Assistant Professor",
+    qualification: "",
+    experience: "",
   });
+
+  const getLoggedInEmail = () => {
+    if (auth.currentUser && auth.currentUser.email) {
+      return auth.currentUser.email.trim().toLowerCase();
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      if (stored.email) return stored.email.trim().toLowerCase();
+    } catch (e) {}
+    return "guest@jpcollege.edu";
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (staffRef.current && !staffRef.current.contains(event.target)) {
-        setIsStaffOpen(false);
+      if (deptRef.current && !deptRef.current.contains(event.target)) {
+        setIsDeptOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fetchSubjects = useCallback(async () => {
-    if (!deptId) return;
+  const fetchStaff = async () => {
     try {
+      const userEmail = getLoggedInEmail();
       const q = query(
-        collection(db, "subjects"),
-        where("deptId", "==", deptId),
+        collection(db, "staff"),
+        where("userEmail", "==", userEmail),
       );
-      const querySnapshot = await getDocs(q);
-      setSubjects(
-        querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      const staffSnap = await getDocs(q);
+      setStaffList(
+        staffSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
       );
-    } catch (error) {
-      console.error("Error fetching subjects: ", error);
+    } catch (err) {
+      console.error(err);
     }
-  }, [deptId]);
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const userEmail = getLoggedInEmail();
+      const q = query(
+        collection(db, "departments"),
+        where("userEmail", "==", userEmail),
+      );
+      const deptSnap = await getDocs(q);
+      setDepartments(
+        deptSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const deptRef = doc(db, "departments", deptId);
-        const deptSnap = await getDoc(deptRef);
+    fetchStaff();
+    fetchDepartments();
+  }, []);
 
-        if (deptSnap.exists()) {
-          setDepartment({ id: deptSnap.id, ...deptSnap.data() });
-        } else {
-          console.error("Department not found in database.");
-          setDepartment({ name: "Unknown Department", totalSemesters: 8 });
-        }
-
-        const staffSnap = await getDocs(collection(db, "staff"));
-        setStaffList(
-          staffSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
-        );
-
-        fetchSubjects();
-      } catch (error) {
-        console.error("Error fetching initial data: ", error);
-      }
-    };
-
-    if (deptId) {
-      fetchData();
-    }
-  }, [deptId, fetchSubjects]);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleStaffSelect = (staff) => {
-    setFormData({
-      ...formData,
-      staffId: staff.id,
-      staffName: staff.name,
-    });
-    setIsStaffOpen(false);
-  };
+  const handleInputChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const openAddForm = () => {
     setFormData({
       name: "",
-      code: "",
-      credits: "",
-      syllabus: "",
-      staffId: "",
-      staffName: "",
+      employeeId: "",
+      email: "",
+      department: "",
+      designation: "Assistant Professor",
+      qualification: "",
+      experience: "",
     });
     setIsEditing(false);
     setEditId(null);
     setShowForm(true);
   };
 
-  const openEditForm = (sub) => {
+  const openEditForm = (staff, e) => {
+    e.stopPropagation();
     setFormData({
-      name: sub.name || "",
-      code: sub.code || "",
-      credits: sub.credits || "",
-      syllabus: sub.syllabus || "",
-      staffId: sub.staffId || "",
-      staffName: sub.staffName || "",
+      name: staff.name,
+      employeeId: staff.employeeId,
+      email: staff.email,
+      department: staff.department,
+      designation: staff.designation,
+      qualification: staff.qualification,
+      experience: staff.experience,
     });
     setIsEditing(true);
-    setEditId(sub.id);
+    setEditId(staff.id);
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.department) {
+      alert("Please select a department");
+      return;
+    }
     setLoading(true);
+    const userEmail = getLoggedInEmail();
     try {
-      const subjectData = { ...formData, deptId, semester: activeSemester };
+      const staffPayload = { ...formData, userEmail };
       if (isEditing) {
-        await updateDoc(doc(db, "subjects", editId), subjectData);
+        await updateDoc(doc(db, "staff", editId), staffPayload);
       } else {
-        await addDoc(collection(db, "subjects"), subjectData);
+        await addDoc(collection(db, "staff"), staffPayload);
       }
       setShowForm(false);
-      fetchSubjects();
+      fetchStaff();
     } catch (error) {
-      console.error("Error saving subject: ", error);
-      alert("Failed to save subject. Please try again.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this subject?")) {
-      try {
-        await deleteDoc(doc(db, "subjects", id));
-        fetchSubjects();
-      } catch (error) {
-        console.error("Error deleting subject: ", error);
-      }
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this staff member?")) {
+      await deleteDoc(doc(db, "staff", id));
+      fetchStaff();
     }
   };
-
-  if (!department) {
-    return (
-      <div
-        className="page-container"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "60vh",
-        }}
-      >
-        <h2>Loading Department Details...</h2>
-      </div>
-    );
-  }
-
-  const activeSubjects = subjects.filter(
-    (sub) => sub.semester === activeSemester,
-  );
-
-  const semesterCount = Number(department.totalSemesters) || 8;
-  const totalSemestersArray = Array.from(
-    { length: semesterCount },
-    (_, i) => i + 1,
-  );
-
-  const selectedStaffObj = staffList.find((s) => s.id === formData.staffId);
 
   return (
     <div className="page-container fade-in">
       <div className="page-header">
         <div>
-          <button className="back-btn" onClick={() => navigate("/departments")}>
-            <ArrowLeft size={16} /> Back to Departments
-          </button>
-          <h1 className="page-title mt-2">
-            <BookOpen className="title-icon" /> {department.name}
+          <h1 className="page-title">
+            <Users className="title-icon" /> Staff Management
           </h1>
           <p className="page-subtitle">
-            Manage semesters, syllabus, and staff assignments.
+            Manage faculty members, departmental roles, and academic
+            qualifications.
           </p>
         </div>
         <button className="primary-btn" onClick={openAddForm}>
-          <Plus size={18} /> Add Subject to Sem {activeSemester}
+          <Plus size={18} /> Add Staff Member
         </button>
       </div>
 
-      <div className="semester-layout">
-        <div className="semester-tabs">
-          <h3 className="tabs-title">
-            <LayoutList size={18} /> Semesters
-          </h3>
-          <div className="tabs-list">
-            {totalSemestersArray.map((sem) => (
-              <button
-                key={sem}
-                className={`sem-tab ${activeSemester === sem ? "active" : ""}`}
-                onClick={() => setActiveSemester(sem)}
-              >
-                Semester {sem}
-              </button>
-            ))}
+      <div className="table-container">
+        {staffList.length === 0 ? (
+          <div className="empty-state">
+            <Users size={48} className="empty-icon" />
+            <h3>No Staff Members Found</h3>
+            <p>Click 'Add Staff Member' to register faculty profiles.</p>
           </div>
-        </div>
-
-        <div className="subjects-container">
-          <div className="subjects-header">
-            <h3>Subjects for Semester {activeSemester}</h3>
-            <span className="badge-blue">{activeSubjects.length} Subjects</span>
-          </div>
-
-          {activeSubjects.length === 0 ? (
-            <div className="empty-state box-empty">
-              <BookOpen size={40} className="empty-icon" />
-              <h4>No Subjects Added</h4>
-              <p>Add subjects and assign staff for this semester.</p>
-            </div>
-          ) : (
-            <div className="subject-list">
-              {activeSubjects.map((sub) => (
-                <div className="subject-card" key={sub.id}>
-                  <div className="sub-card-top">
-                    <span className="sub-code">{sub.code}</span>
-                    <div className="action-buttons">
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Staff Member</th>
+                <th>Employee ID</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Experience</th>
+                <th style={{ textAlign: "right" }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {staffList.map((staff) => (
+                <tr
+                  key={staff.id}
+                  className="clickable-row"
+                  onClick={() => setSelectedStaff(staff)}
+                >
+                  <td>
+                    <div className="user-cell">
+                      <div className="avatar-small staff-avatar">
+                        {staff.name ? staff.name.charAt(0).toUpperCase() : "S"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-link">
+                          {staff.name}
+                        </span>
+                        <div className="text-xs text-gray">{staff.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="badge-outline">
+                      #{staff.employeeId || "N/A"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="badge-purple">
+                      {staff.department || "N/A"}
+                    </span>
+                  </td>
+                  <td>{staff.designation || "Assistant Professor"}</td>
+                  <td>
+                    {staff.experience ? `${staff.experience} Years` : "N/A"}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <div
+                      className="action-buttons"
+                      style={{ justifyContent: "flex-end" }}
+                    >
                       <button
                         className="icon-btn edit-btn"
-                        onClick={() => openEditForm(sub)}
+                        onClick={(e) => openEditForm(staff, e)}
+                        title="Edit Staff"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         className="icon-btn delete-btn"
-                        onClick={() => handleDelete(sub.id)}
+                        onClick={(e) => handleDelete(staff.id, e)}
+                        title="Delete Staff"
                       >
                         <Trash2 size={16} />
                       </button>
                     </div>
-                  </div>
-                  <h4 className="sub-name">{sub.name}</h4>
-
-                  <div className="sub-details">
-                    <div className="detail-item">
-                      <Hash size={14} /> {sub.credits} Credits
-                    </div>
-                    {sub.staffName ? (
-                      <div className="detail-item staff-assigned">
-                        <UserCheck size={14} /> {sub.staffName}
-                      </div>
-                    ) : (
-                      <div className="detail-item staff-pending">
-                        <UserCheck size={14} /> Unassigned
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  </td>
+                </tr>
               ))}
-            </div>
-          )}
-        </div>
+            </tbody>
+          </table>
+        )}
       </div>
+
+      {selectedStaff && (
+        <div className="modal-overlay" onClick={() => setSelectedStaff(null)}>
+          <div
+            className="modal-content-pro"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="pro-modal-header">
+              <button
+                className="close-btn-pro"
+                onClick={() => setSelectedStaff(null)}
+              >
+                <X size={20} />
+              </button>
+              <div className="pro-header-left">
+                <div className="pro-avatar-lg glowing-avatar">
+                  {selectedStaff.name
+                    ? selectedStaff.name.charAt(0).toUpperCase()
+                    : "S"}
+                </div>
+                <div className="pro-header-text-box">
+                  <div className="pro-badges-row">
+                    <span className="pro-badge-dept">
+                      {selectedStaff.department || "IT"}
+                    </span>
+                    <span className="pro-badge-sem">
+                      {selectedStaff.designation || "Faculty"}
+                    </span>
+                  </div>
+                  <h2>{selectedStaff.name}</h2>
+                  <p>
+                    #{selectedStaff.employeeId} • {selectedStaff.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pro-modal-body">
+              <div className="profile-grid-info">
+                <div className="info-card">
+                  <span className="info-label">
+                    <Hash size={14} /> Employee ID
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.employeeId || "N/A"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">
+                    <Building2 size={14} /> Department
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.department || "N/A"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">
+                    <UserCheck size={14} /> Designation
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.designation || "N/A"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">
+                    <GraduationCap size={14} /> Qualification
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.qualification || "N/A"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">
+                    <Award size={14} /> Teaching Experience
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.experience
+                      ? `${selectedStaff.experience} Years`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="info-card">
+                  <span className="info-label">
+                    <Mail size={14} /> Email Address
+                  </span>
+                  <span className="info-value">
+                    {selectedStaff.email || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={`slide-panel ${showForm ? "open" : ""}`}>
         <div className="panel-header">
           <div className="panel-title-wrapper">
-            {isEditing ? (
-              <Edit2 className="panel-icon edit-icon" size={24} />
-            ) : (
-              <BookOpen className="panel-icon" size={24} />
-            )}
-            <h2>
-              {isEditing
-                ? "Edit Subject"
-                : `Add Subject (Sem ${activeSemester})`}
-            </h2>
+            <Users className="panel-icon" size={24} />
+            <h2>{isEditing ? "Edit Staff Member" : "Add Staff Member"}</h2>
           </div>
           <button className="close-btn" onClick={() => setShowForm(false)}>
             <X size={20} />
@@ -324,21 +379,17 @@ const SemesterManagement = () => {
 
         <form className="panel-form" onSubmit={handleSubmit}>
           <div className="form-section">
-            <h4 className="section-title">Subject Details</h4>
-
             <div className="form-group">
-              <label>
-                Subject Name <span className="required">*</span>
-              </label>
+              <label>Full Name *</label>
               <div className="input-wrapper">
-                <BookOpen size={18} className="input-icon" />
+                <Users size={18} className="input-icon" />
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  placeholder="e.g. Data Structures"
+                  placeholder="e.g. Dr. Chockalingam"
                   className="modern-input"
                 />
               </div>
@@ -346,119 +397,137 @@ const SemesterManagement = () => {
 
             <div className="form-grid">
               <div className="form-group">
-                <label>
-                  Subject Code <span className="required">*</span>
-                </label>
+                <label>Employee ID *</label>
                 <div className="input-wrapper">
                   <Hash size={18} className="input-icon" />
                   <input
                     type="text"
-                    name="code"
-                    value={formData.code}
+                    name="employeeId"
+                    value={formData.employeeId}
                     onChange={handleInputChange}
                     required
-                    placeholder="CS8391"
+                    placeholder="e.g. dhh2"
+                    className="modern-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" ref={deptRef}>
+                <label>Department *</label>
+                <div className="input-wrapper">
+                  <Building2 size={18} className="input-icon" />
+                  <div
+                    className={`custom-dropdown-trigger ${isDeptOpen ? "active" : ""}`}
+                    onClick={() => setIsDeptOpen(!isDeptOpen)}
+                  >
+                    <span
+                      className={`selected-value-text ${!formData.department ? "placeholder" : ""}`}
+                    >
+                      {formData.department || "Select Department"}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`dropdown-chevron ${isDeptOpen ? "open" : ""}`}
+                    />
+                  </div>
+
+                  {isDeptOpen && (
+                    <div className="custom-dropdown-list-box fade-in">
+                      {departments.length === 0 ? (
+                        <div
+                          className="custom-dropdown-item"
+                          style={{ color: "#94a3b8" }}
+                        >
+                          No departments found
+                        </div>
+                      ) : (
+                        departments.map((dept) => (
+                          <div
+                            key={dept.id}
+                            className={`custom-dropdown-item ${formData.department === dept.name ? "selected" : ""}`}
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                department: dept.name,
+                              });
+                              setIsDeptOpen(false);
+                            }}
+                          >
+                            {dept.name}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Designation *</label>
+                <div className="input-wrapper">
+                  <UserCheck size={18} className="input-icon" />
+                  <input
+                    type="text"
+                    name="designation"
+                    value={formData.designation}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="e.g. Assistant Professor"
                     className="modern-input"
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>
-                  Credits <span className="required">*</span>
-                </label>
+                <label>Qualification *</label>
                 <div className="input-wrapper">
-                  <FileText size={18} className="input-icon" />
+                  <GraduationCap size={18} className="input-icon" />
                   <input
-                    type="number"
-                    name="credits"
-                    value={formData.credits}
+                    type="text"
+                    name="qualification"
+                    value={formData.qualification}
                     onChange={handleInputChange}
                     required
-                    min="1"
-                    max="10"
+                    placeholder="e.g. M.Sc CS, Ph.D"
                     className="modern-input"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="form-group" style={{ marginTop: "10px" }}>
-              <label>
-                Syllabus / Units <span className="required">*</span>
-              </label>
-              <div className="input-wrapper textarea-wrapper">
-                <FileText size={18} className="input-icon" />
-                <textarea
-                  name="syllabus"
-                  value={formData.syllabus}
-                  onChange={handleInputChange}
-                  rows="4"
-                  required
-                  placeholder="Enter syllabus details..."
-                  className="modern-textarea"
-                ></textarea>
-              </div>
-            </div>
-          </div>
-
-          <div className="form-divider"></div>
-
-          <div className="form-section">
-            <h4 className="section-title">Staff Assignment</h4>
-
-            {/* Custom Styled Staff Dropdown */}
-            <div className="form-group" ref={staffRef}>
-              <label>
-                Assign to Staff <span className="required">*</span>
-              </label>
-              <div className="input-wrapper">
-                <UserCheck size={18} className="input-icon" />
-                <div
-                  className={`custom-dropdown-trigger ${
-                    isStaffOpen ? "active" : ""
-                  }`}
-                  onClick={() => setIsStaffOpen(!isStaffOpen)}
-                >
-                  <span className="selected-value-text">
-                    {formData.staffName
-                      ? `${formData.staffName} ${
-                          selectedStaffObj?.qualification
-                            ? `(${selectedStaffObj.qualification})`
-                            : ""
-                        }`
-                      : "Select a Staff Member"}
-                  </span>
-                  <ChevronDown
-                    size={16}
-                    className={`dropdown-chevron ${isStaffOpen ? "open" : ""}`}
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Experience (Years) *</label>
+                <div className="input-wrapper">
+                  <Award size={18} className="input-icon" />
+                  <input
+                    type="number"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="e.g. 4"
+                    className="modern-input"
                   />
                 </div>
+              </div>
 
-                {isStaffOpen && (
-                  <div className="custom-dropdown-list-box fade-in">
-                    {staffList.length === 0 ? (
-                      <div
-                        className="custom-dropdown-item"
-                        style={{ color: "#94a3b8" }}
-                      >
-                        No staff members found
-                      </div>
-                    ) : (
-                      staffList.map((staff) => (
-                        <div
-                          key={staff.id}
-                          className={`custom-dropdown-item ${
-                            formData.staffId === staff.id ? "selected" : ""
-                          }`}
-                          onClick={() => handleStaffSelect(staff)}
-                        >
-                          {staff.name} ({staff.qualification || "Staff"})
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+              <div className="form-group">
+                <label>Email Address *</label>
+                <div className="input-wrapper">
+                  <Mail size={18} className="input-icon" />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="staff@jpcas.edu.in"
+                    className="modern-input"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -480,7 +549,8 @@ const SemesterManagement = () => {
                 "Saving..."
               ) : (
                 <>
-                  <CheckCircle2 size={18} /> Save Subject
+                  <CheckCircle2 size={18} />{" "}
+                  {isEditing ? "Save Changes" : "Register Staff"}
                 </>
               )}
             </button>
@@ -495,4 +565,4 @@ const SemesterManagement = () => {
   );
 };
 
-export default SemesterManagement;
+export default StaffManagement;
