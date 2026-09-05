@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
-  Users,
   Building2,
-  GraduationCap,
   FileText,
   BrainCircuit,
   LogOut,
@@ -33,19 +31,18 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  // Updated navigation items pointing to unified Hub and other features
   const navItems = [
     {
       path: "/dashboard",
       name: "Dashboard",
       icon: <LayoutDashboard size={20} />,
     },
-    { path: "/staff", name: "Staff Management", icon: <Users size={20} /> },
     {
-      path: "/departments",
-      name: "Departments",
+      path: "/institution",
+      name: "Institution Hub",
       icon: <Building2 size={20} />,
     },
-    { path: "/students", name: "Students", icon: <GraduationCap size={20} /> },
     { path: "/exams", name: "Exams & Marks", icon: <FileText size={20} /> },
     {
       path: "/ai-analysis",
