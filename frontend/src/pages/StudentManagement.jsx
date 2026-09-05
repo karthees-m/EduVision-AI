@@ -9,7 +9,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   GraduationCap,
   UserPlus,
@@ -66,6 +66,17 @@ const StudentManagement = () => {
     marks: {},
   });
 
+  const getLoggedInEmail = () => {
+    if (auth.currentUser && auth.currentUser.email) {
+      return auth.currentUser.email.trim().toLowerCase();
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      if (stored.email) return stored.email.trim().toLowerCase();
+    } catch (e) {}
+    return "guest@jpcollege.edu";
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (deptRef.current && !deptRef.current.contains(event.target)) {
@@ -81,12 +92,22 @@ const StudentManagement = () => {
 
   const fetchData = async () => {
     try {
-      const deptSnap = await getDocs(collection(db, "departments"));
+      const userEmail = getLoggedInEmail();
+
+      const deptQuery = query(
+        collection(db, "departments"),
+        where("userEmail", "==", userEmail),
+      );
+      const deptSnap = await getDocs(deptQuery);
       setDepartments(
         deptSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
       );
 
-      const studentSnap = await getDocs(collection(db, "students"));
+      const studentQuery = query(
+        collection(db, "students"),
+        where("userEmail", "==", userEmail),
+      );
+      const studentSnap = await getDocs(studentQuery);
       setStudents(
         studentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
       );
@@ -134,11 +155,13 @@ const StudentManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const userEmail = getLoggedInEmail();
     try {
+      const studentPayload = { ...formData, userEmail };
       if (isEditing) {
-        await updateDoc(doc(db, "students", editId), formData);
+        await updateDoc(doc(db, "students", editId), studentPayload);
       } else {
-        await addDoc(collection(db, "students"), formData);
+        await addDoc(collection(db, "students"), studentPayload);
       }
       setShowForm(false);
       fetchData();
