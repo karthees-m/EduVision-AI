@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db, auth } from "../firebase";
 import {
   Building2,
   Users,
@@ -28,12 +28,38 @@ const Dashboard = () => {
   const [recentStudents, setRecentStudents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getLoggedInEmail = () => {
+    if (auth.currentUser && auth.currentUser.email) {
+      return auth.currentUser.email.trim().toLowerCase();
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      if (stored.email) return stored.email.trim().toLowerCase();
+    } catch (e) {}
+    return "guest@jpcollege.edu";
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const deptSnap = await getDocs(collection(db, "departments"));
-        const staffSnap = await getDocs(collection(db, "staff"));
-        const studentSnap = await getDocs(collection(db, "students"));
+        const userEmail = getLoggedInEmail();
+
+        const deptQuery = query(
+          collection(db, "departments"),
+          where("userEmail", "==", userEmail),
+        );
+        const staffQuery = query(
+          collection(db, "staff"),
+          where("userEmail", "==", userEmail),
+        );
+        const studentQuery = query(
+          collection(db, "students"),
+          where("userEmail", "==", userEmail),
+        );
+
+        const deptSnap = await getDocs(deptQuery);
+        const staffSnap = await getDocs(staffQuery);
+        const studentSnap = await getDocs(studentQuery);
 
         setStats({
           departments: deptSnap.size,
@@ -61,9 +87,9 @@ const Dashboard = () => {
       <div className="dashboard-banner">
         <div className="banner-content">
           <div className="banner-badge">
-            <ShieldCheck size={14} />  Admin Portal • EduVision Core
+            <ShieldCheck size={14} /> Admin Portal • EduVision Core
           </div>
-          <h1 className="banner-title">Welcome back, Administrator </h1>
+          <h1 className="banner-title">Welcome back, Administrator</h1>
           <p className="banner-subtitle">
             Comprehensive academic management ecosystem active. Real-time
             monitoring of departments, staff allocation, student records, and
