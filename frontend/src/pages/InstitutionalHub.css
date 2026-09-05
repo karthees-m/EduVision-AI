@@ -1,0 +1,137 @@
+.hub-container {
+  padding: 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #1e293b;
+}
+
+.hub-header {
+  margin-bottom: 2.5rem;
+}
+
+.hub-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.hub-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-top: 6px;
+}
+
+.hub-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.hub-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.hub-card:hover {
+  transform: translateY(-6px);
+  border-color: #6366f1;
+  box-shadow:
+    0 20px 25px -5px rgba(99, 102, 241, 0.1),
+    0 10px 10px -5px rgba(99, 102, 241, 0.04);
+}
+
+.hub-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.hub-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dept-bg {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+.staff-bg {
+  background: rgba(6, 182, 212, 0.1);
+  color: #0891b2;
+}
+.student-bg {
+  background: rgba(168, 85, 247, 0.1);
+  color: #9333ea;
+}
+
+.hub-count-badge {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.hub-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.hub-card p {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.hub-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6366f1;
+  transition: color 0.2s;
+}
+
+.hub-card:hover .hub-card-footer {
+  color: #0891b2;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
